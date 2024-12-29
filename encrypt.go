@@ -15,6 +15,7 @@ func Encoded(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+// encryption function
 func Encrypt(text, Secret string) (string, error) {
 	block, err := aes.NewCipher([]byte(Secret))
 	if err != nil {
@@ -27,16 +28,56 @@ func Encrypt(text, Secret string) (string, error) {
 	return Encoded(cipherText), nil
 }
 
-func main() {
-	fmt.Println("Type message to encode")
-	fmt.Println("-----------------------")
-	var StringtoEncrypt string
-	fmt.Scanln(&StringtoEncrypt)
-	encrypit := StringtoEncrypt
-
-	encText, err := Encrypt(encrypit, Secret)
+func Decode(s string) []byte {
+	data, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		fmt.Println("error encrypting your classified text: ", err)
+		panic(err)
 	}
-	fmt.Println(encText)
+	return data
+}
+
+// decryption function
+func Decrypt(text, Secret string) (string, error) {
+	block, err := aes.NewCipher([]byte(Secret))
+	if err != nil {
+		return "", err
+	}
+	cipherText := Decode(text)
+	cfb := cipher.NewCFBDecrypter(block, bytes)
+	plainText := make([]byte, len(cipherText))
+	cfb.XORKeyStream(plainText, cipherText)
+	return string(plainText), nil
+}
+
+// print the encrypted or decrypted message
+func main() {
+	fmt.Println("Do you want to encode or decode a message? (e/d)")
+	var choice string
+	fmt.Scanln(&choice)
+
+	if choice == "e" {
+		fmt.Println("Type message to encode")
+		fmt.Println("-----------------------")
+		var StringtoEncrypt string
+		fmt.Scanln(&StringtoEncrypt)
+		encText, err := Encrypt(StringtoEncrypt, Secret)
+		if err != nil {
+			fmt.Println("error encrypting your classified text: ", err)
+		} else {
+			fmt.Println("Encoded text:", encText)
+		}
+	} else if choice == "d" {
+		fmt.Println("Type message to decode")
+		fmt.Println("-----------------------")
+		var StringtoDecrypt string
+		fmt.Scanln(&StringtoDecrypt)
+		decText, err := Decrypt(StringtoDecrypt, Secret)
+		if err != nil {
+			fmt.Println("error decrypting your classified text: ", err)
+		} else {
+			fmt.Println("Decoded text:", decText)
+		}
+	} else {
+		fmt.Println("Invalid choice. Please enter 'e' to encode or 'd' to decode.")
+	}
 }
