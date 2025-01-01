@@ -13,16 +13,22 @@ import (
 
 var bytes = []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05}
 
-const Secret string = "abc&1*~#^2^#s0^=)^^7%b34"
-
 // Encoded encodes bytes to a base64 string
 func Encoded(b []byte) string {
     return base64.StdEncoding.EncodeToString(b)
 }
 
+// padKey pads or truncates the key to 32 bytes
+func padKey(key string) []byte {
+    paddedKey := make([]byte, 32)
+    copy(paddedKey, key)
+    return paddedKey
+}
+
 // Encrypt encrypts the given text using the provided secret key
 func Encrypt(text, Secret string) (string, error) {
-    block, err := aes.NewCipher([]byte(Secret))
+    key := padKey(Secret)
+    block, err := aes.NewCipher(key)
     if err != nil {
         return "", err
     }
@@ -44,7 +50,8 @@ func Decode(s string) []byte {
 
 // Decrypt decrypts the given text using the provided secret key
 func Decrypt(text, Secret string) (string, error) {
-    block, err := aes.NewCipher([]byte(Secret))
+    key := padKey(Secret)
+    block, err := aes.NewCipher(key)
     if err != nil {
         return "", err
     }
@@ -55,17 +62,20 @@ func Decrypt(text, Secret string) (string, error) {
     return string(plainText), nil
 }
 
-// main function to handle user input and perform encryption or decryption
 func main() {
     fmt.Println("Do you want to encode or decode a message? (e/d)")
     var choice string
     fmt.Scanln(&choice)
 
+    fmt.Println("Enter the secret key:")
+    reader := bufio.NewReader(os.Stdin)
+    Secret, _ := reader.ReadString('\n')
+    Secret = strings.TrimSpace(Secret)
+
     if choice == "e" {
         // Handle encryption
         fmt.Println("Type message to encode")
         fmt.Println("-----------------------")
-        reader := bufio.NewReader(os.Stdin)
         StringtoEncrypt, _ := reader.ReadString('\n')
         StringtoEncrypt = strings.TrimSpace(StringtoEncrypt)
         encText, err := Encrypt(StringtoEncrypt, Secret)
@@ -93,36 +103,15 @@ func main() {
         }
     } else if choice == "d" {
         // Handle decryption
-        fmt.Println("Do you want to decode from a file? (y/n)")
-        var decodeFromFile string
-        fmt.Scanln(&decodeFromFile)
-        var StringtoDecrypt string
-        if decodeFromFile == "y" {
-            // Read encoded text from file
-            fmt.Println("Enter the filename:")
-            var filename string
-            fmt.Scanln(&filename)
-            data, err := ioutil.ReadFile(filename)
-            if err != nil {
-                fmt.Println("error reading from file: ", err)
-                return
-            }
-            StringtoDecrypt = string(data)
-        } else {
-            // Read encoded text from console
-            fmt.Println("Type message to decode")
-            fmt.Println("-----------------------")
-            fmt.Scanln(&StringtoDecrypt)
-        }
+        fmt.Println("Type message to decode")
+        fmt.Println("-----------------------")
+        StringtoDecrypt, _ := reader.ReadString('\n')
+        StringtoDecrypt = strings.TrimSpace(StringtoDecrypt)
         decText, err := Decrypt(StringtoDecrypt, Secret)
         if err != nil {
             fmt.Println("error decrypting your classified text: ", err)
         } else {
-            // Print decoded text to console
             fmt.Println("Decoded text:", decText)
         }
-    } else {
-        // Handle invalid choice
-        fmt.Println("Invalid choice. Please enter 'e' to encode or 'd' to decode.")
     }
 }
