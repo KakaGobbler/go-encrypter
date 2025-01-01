@@ -1,12 +1,14 @@
 package main
 
 import (
+    "bufio"
     "crypto/aes"
     "crypto/cipher"
     "encoding/base64"
     "fmt"
     "io/ioutil"
     "os"
+    "strings"
 )
 
 var bytes = []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05}
@@ -63,8 +65,9 @@ func main() {
         // Handle encryption
         fmt.Println("Type message to encode")
         fmt.Println("-----------------------")
-        var StringtoEncrypt string
-        fmt.Scanln(&StringtoEncrypt)
+        reader := bufio.NewReader(os.Stdin)
+        StringtoEncrypt, _ := reader.ReadString('\n')
+        StringtoEncrypt = strings.TrimSpace(StringtoEncrypt)
         encText, err := Encrypt(StringtoEncrypt, Secret)
         if err != nil {
             fmt.Println("error encrypting your classified text: ", err)
